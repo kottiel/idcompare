@@ -3,4 +3,4 @@ project(idcompare C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(idcompare main.c idoc.h)
+add_executable(idcompare main.c idoc.h idoc.c)
