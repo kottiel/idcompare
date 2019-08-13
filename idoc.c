@@ -45,7 +45,7 @@ size_t strlcpy(char *dst, const char *src, size_t dsize) {
  * Adapted from strlcpy (see above). Modified for strings that are
  * space delimited.
  */
-size_t strlcpy_sp(char *dst, const char *src, size_t dsize) {
+size_t strlcpy_spdl(char *dst, const char *src, size_t dsize) {
     const char *osrc = src;
     size_t nleft = dsize;
 
@@ -75,6 +75,14 @@ int read_idoc(Idoc_row *idoc, FILE *fp) {
     char linetype[TYPE];
     char line[MAX_ROW_LEN] = {};
     int n = 0;
+    int capacity = START_SIZE;
+    char current_pcode[MED] = {};
+    char current_label[LBL] = {};
+    char *cp = current_pcode;
+    char *lb = current_label;
+    char *at;
+    char *lt;
+
     idoc = (Idoc_row *)malloc((START_SIZE) * sizeof(Idoc_row));
 
     // read and discard first idoc line
@@ -82,12 +90,35 @@ int read_idoc(Idoc_row *idoc, FILE *fp) {
 
     while (fgets(line, MAX_ROW_LEN - 1, fp) != NULL) {
 
-        strlcpy(linetype, line, TYPE);
+        strlcpy(linetype, line + ID_START, TYPE);
+        at = line + ATTR_NAME;
+        lt = linetype;
 
-        if (strcmp(linetype, "Z2BTMH") == 0) {
-            strlcpy_sp(idoc[n++].pcode, line + ATTR_NAME, MED);
-            printf("%s\n",idoc[n].pcode);
+        if (strcmp(linetype, MATNR) == 0) {
+            strlcpy_spdl(current_pcode, line + ATTR_NAME, MED);
 
+        } else if (strcmp(linetype, LABEL) == 0) {
+            strlcpy_spdl(current_label, line + ATTR_NAME, LBL);
+
+/*
+        } else if ((strcmp(linetype, TDLINE) == 0)) {
+            strlcpy(idoc[n].pcode, current_pcode, MED);
+            strlcpy(idoc[n].label, current_label, LBL);
+            strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
+*/
+
+
+        } else if (strcmp(linetype, DESCR) == 0) {
+            strlcpy(idoc[n].pcode, current_pcode, MED);
+            strlcpy(idoc[n].label, current_label, LBL);
+            strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
+            printf("%s %s %s\n", current_pcode, current_label, idoc[n].attr_name);
+            n++;
+        }
+
+        if (n == capacity) {
+            capacity *= 2;
+            idoc = (Idoc_row *)realloc(idoc, (capacity) * sizeof(Idoc_row));
         }
     }
     return n;

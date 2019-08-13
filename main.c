@@ -19,9 +19,16 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    //fpMaster = fopen(argv[2], "r");
-
     read_idoc(sap, fpSAP);
+    free(sap);
+
+    /*if ((fpMaster = fopen(argv[2], "r")) == NULL) {
+        printf("File not found.\n");
+        return EXIT_FAILURE;
+    }
+
+    read_idoc(master, fpMaster);
+    free(master);*/
 
     return 0;
 }
