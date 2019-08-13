@@ -9,7 +9,7 @@
 #define LBL            10
 #define MAX_ROW_LEN  1000
 #define TYPE            7
-#define ATTR_NAME      64
+#define ATTR_NAME      63
 
 
 
