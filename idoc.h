@@ -1,5 +1,5 @@
 //
-// Created by jkottiel on 8/12/2019.
+// Created by kottiel on 8/12/2019.
 //
 
 #ifndef IDCOMPARE_IDOC_H
@@ -11,7 +11,9 @@
 #define LBL                10
 #define MAX_ROW_LEN      1000
 #define RIGHT_MOST_EDGE    99
+#define TDLINE_RIGHT_EDGE  70
 #define VALUE_START       123
+#define TDLINE_START      152
 #define TYPE                3
 #define ATTR_NAME          63
 #define START_SIZE         10
@@ -32,6 +34,6 @@ size_t strlcpy(char *dst, const char *src, size_t dsize);
 
 size_t strlcpy_spdl(char *dst, const char *src, size_t dsize);
 
-int read_idoc(Idoc_row *idoc, FILE *fp);
+Idoc_row *read_idoc(int *n, FILE *fp);
 
 #endif //IDCOMPARE_IDOC_H

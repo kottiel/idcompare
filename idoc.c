@@ -1,5 +1,5 @@
 //
-// Created by kott on 8/13/19.
+// Created by kottiel on 8/13/19.
 //
 
 #include <stdlib.h>
@@ -72,9 +72,9 @@ size_t strlcpy_spdl(char *dst, const char *src, size_t dsize) {
 
 char *get_value(char *line) {
 
-    char *rpos = line + RIGHT_MOST_EDGE;
     char *lpos, *str;
-    int length;
+    size_t length = strlen(line);
+    char *rpos = line + length - 1;
 
     // start at right-most edge, look for any non-space character
     while (*rpos-- == ' ');
@@ -87,12 +87,12 @@ char *get_value(char *line) {
     length = rpos - lpos++;
 
     str = (char *)malloc(length + 1);
-    strncpy(str, lpos, length + 1);
+    strlcpy(str, lpos, length + 1);
     str[length] = '\0';
     return str;
 }
 
-int read_idoc(Idoc_row *idoc, FILE *fp) {
+Idoc_row *read_idoc(int *num_lines, FILE *fp) {
 
     char linetype[TYPE];
     char line[MAX_ROW_LEN] = {};
@@ -100,12 +100,9 @@ int read_idoc(Idoc_row *idoc, FILE *fp) {
     int capacity = START_SIZE;
     char current_pcode[MED] = {};
     char current_label[LBL] = {};
-    char *cp = current_pcode;
-    char *lb = current_label;
-    char *at;
-    char *lt;
+    size_t total_len = 0;
 
-    idoc = (Idoc_row *)malloc((START_SIZE) * sizeof(Idoc_row));
+    Idoc_row *idoc = (Idoc_row *)malloc((START_SIZE) * sizeof(Idoc_row));
 
     // read and discard first idoc line
     fgets(line, MAX_ROW_LEN - 1, fp);
@@ -113,28 +110,42 @@ int read_idoc(Idoc_row *idoc, FILE *fp) {
     while (fgets(line, MAX_ROW_LEN - 1, fp) != NULL) {
 
         strlcpy(linetype, line + ID_START, TYPE);
-        at = line + ATTR_NAME;
-        lt = linetype;
 
         if (strcmp(linetype, MATNR) == 0) {
             strlcpy_spdl(current_pcode, line + ATTR_NAME, MED);
 
         } else if (strcmp(linetype, LABEL) == 0) {
             strlcpy_spdl(current_label, line + ATTR_NAME, LBL);
-
-/*
-        } else if ((strcmp(linetype, TDLINE) == 0)) {
+        } else if (strcmp(linetype, TDLINE) == 0){
             strlcpy(idoc[n].pcode, current_pcode, MED);
             strlcpy(idoc[n].label, current_label, LBL);
-            strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
-*/
+            strcpy(idoc[n].attr_name, "TDLINE");
+
+            char *tmp;
+            char *tdline;
+            tdline = (char *)calloc(1, sizeof(char));
+
+            do {
+                line[TDLINE_START + TDLINE_RIGHT_EDGE] = '\0';
+                tmp = get_value(line + TDLINE_START);
+                total_len += strlen(tmp);
+                tdline = (char *) realloc(tdline, total_len);
+                strcat(tdline, tmp);
+
+                if (fgets(line, MAX_ROW_LEN - 1, fp) != NULL)
+                    strlcpy(linetype, line + ID_START, TYPE);
+            } while (strcmp(linetype, TDLINE) == 0);
+
+            idoc[n].attr_val = tdline;
+            n++;
 
         } else if (strcmp(linetype, DESCR) == 0) {
             strlcpy(idoc[n].pcode, current_pcode, MED);
             strlcpy(idoc[n].label, current_label, LBL);
             strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
+
+            line[VALUE_START + RIGHT_MOST_EDGE] = '\0';
             idoc[n].attr_val = get_value(line + VALUE_START);
-            printf("%30s %9s %30s %s\n", current_pcode, current_label, idoc[n].attr_name, idoc[n].attr_val);
             n++;
         }
 
@@ -143,5 +154,7 @@ int read_idoc(Idoc_row *idoc, FILE *fp) {
             idoc = (Idoc_row *)realloc(idoc, (capacity) * sizeof(Idoc_row));
         }
     }
-    return n;
+
+    *num_lines = n;
+    return idoc;
 }
