@@ -7,23 +7,25 @@
 
 #include <stdio.h>
 
-#define MED            31
-#define LBL            10
-#define MAX_ROW_LEN  1000
-#define TYPE            3
-#define ATTR_NAME      63
-#define START_SIZE     10
-#define ID_START        4
-#define MATNR          "MH"
-#define LABEL          "LH"
-#define TDLINE         "TX"
-#define DESCR          "LC"
+#define MED                31
+#define LBL                10
+#define MAX_ROW_LEN      1000
+#define RIGHT_MOST_EDGE    99
+#define VALUE_START       123
+#define TYPE                3
+#define ATTR_NAME          63
+#define START_SIZE         10
+#define ID_START            4
+#define MATNR            "MH"
+#define LABEL            "LH"
+#define TDLINE           "TX"
+#define DESCR            "LC"
 
 typedef struct {
     char pcode[MED];
     char label[LBL];
     char attr_name[MED];
-    char attr_val[MED];
+    char *attr_val;
 } Idoc_row;
 
 size_t strlcpy(char *dst, const char *src, size_t dsize);

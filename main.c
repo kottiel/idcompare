@@ -19,7 +19,11 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    read_idoc(sap, fpSAP);
+    int lines = read_idoc(sap, fpSAP);
+
+    for (int i = 0; i < lines; i++) {
+        free(sap[lines].attr_val);
+    }
     free(sap);
 
     /*if ((fpMaster = fopen(argv[2], "r")) == NULL) {

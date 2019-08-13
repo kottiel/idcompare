@@ -70,6 +70,28 @@ size_t strlcpy_spdl(char *dst, const char *src, size_t dsize) {
     return (src - osrc - 1);    /* count does not include NUL */
 }
 
+char *get_value(char *line) {
+
+    char *rpos = line + RIGHT_MOST_EDGE;
+    char *lpos, *str;
+    int length;
+
+    // start at right-most edge, look for any non-space character
+    while (*rpos-- == ' ');
+
+    // start at last char and find either the '\' or the first position
+    lpos = ++rpos;
+    while ((*lpos != '\\') && lpos >= line)
+        lpos--;
+
+    length = rpos - lpos++;
+
+    str = (char *)malloc(length + 1);
+    strncpy(str, lpos, length + 1);
+    str[length] = '\0';
+    return str;
+}
+
 int read_idoc(Idoc_row *idoc, FILE *fp) {
 
     char linetype[TYPE];
@@ -107,12 +129,12 @@ int read_idoc(Idoc_row *idoc, FILE *fp) {
             strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
 */
 
-
         } else if (strcmp(linetype, DESCR) == 0) {
             strlcpy(idoc[n].pcode, current_pcode, MED);
             strlcpy(idoc[n].label, current_label, LBL);
             strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
-            printf("%s %s %s\n", current_pcode, current_label, idoc[n].attr_name);
+            idoc[n].attr_val = get_value(line + VALUE_START);
+            printf("%30s %9s %30s %s\n", current_pcode, current_label, idoc[n].attr_name, idoc[n].attr_val);
             n++;
         }
 
