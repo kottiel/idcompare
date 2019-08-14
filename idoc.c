@@ -216,3 +216,5 @@ Idoc_row *read_idoc(int *num_lines, FILE *fp) {
     *num_lines = n;
     return idoc;
 }
+
+int compare(FILE fpout, Idoc_row *master, Idoc_row *sap);

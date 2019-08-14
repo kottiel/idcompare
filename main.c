@@ -11,7 +11,8 @@ int main(int argc, char *argv[]) {
 
     FILE *fpSAP, *fpMaster, *fpout;
 
-    int num_lines = 0;
+    int sap_numlines = 0;
+    int master_numlines = 0;
 
     Idoc_row *sap;
     Idoc_row *master;
@@ -26,20 +27,16 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    sap = read_idoc(&num_lines, fpSAP);
-    qsort(sap, num_lines, sizeof(Idoc_row), comparator);
-    printf("Processed %d lines in the SAP extract...\n", num_lines);
+    sap = read_idoc(&sap_numlines, fpSAP);
+    qsort(sap, sap_numlines, sizeof(Idoc_row), comparator);
+    printf("Processed %d lines in the SAP extract...\n", sap_numlines);
 
     fpout = fopen("sap_out.txt", "w");
-    for (int i = 0; i < num_lines; i++)
+    for (int i = 0; i < sap_numlines; i++)
         fprintf(fpout, "%-15s %9s %-28s %s\n", sap[i].pcode, sap[i].label, sap[i].attr_name, sap[i].attr_val);
     fclose(fpout);
 
-    for (int i = 0; i < num_lines; i++) {
-        free(sap[i].attr_val);
-    }
 
-    free(sap);
 
     if ((fpMaster = fopen(argv[2], "r")) == NULL) {
         printf("File not found.\n");
@@ -47,19 +44,24 @@ int main(int argc, char *argv[]) {
     }
 
     fpout = fopen("master_out.txt", "w");
-    master = read_idoc(&num_lines, fpMaster);
-    qsort(master, num_lines, sizeof(Idoc_row), comparator);
+    master = read_idoc(&master_numlines, fpMaster);
+    qsort(master, master_numlines, sizeof(Idoc_row), comparator);
 
-    printf("Processed %d lines in the Master idoc...\n", num_lines);
-    for (int i = 0; i < num_lines; i++)
+    printf("Processed %d lines in the Master idoc...\n", master_numlines);
+    for (int i = 0; i < master_numlines; i++)
         fprintf(fpout, "%-15s %9s %-28s %s\n", master[i].pcode, master[i].label, master[i].attr_name,
                 master[i].attr_val);
     fclose(fpout);
 
-    for (int i = 0; i < num_lines; i++) {
+    for (int i = 0; i < sap_numlines; i++) {
+        free(sap[i].attr_val);
+    }
+
+    for (int i = 0; i < master_numlines; i++) {
         free(master[i].attr_val);
     }
 
+    free(sap);
     free(master);
 
     clock_t stop = clock();
@@ -67,33 +69,31 @@ int main(int argc, char *argv[]) {
     printf("\nTime elapsed: %.5f\n", elapsed);
 
     /* report
-     * MAS    SAP
-a      a
-b      b
-c      d
-g      e
-
-while not EOF MAS and not EOF SAP
-	read mas
+     	read mas
 	read sap
-	if mas <> sap and mas < sap:
-	   report missing mas record current record "xyz"
-           read next mas
+while not EOF MAS and not EOF SAP
 
-        else mas <> sap and mas > sap
-           report sap record not found current record
-           read next sap
+	if mas <> sap
+           if mas < sap:
+	      print record # not in SAP
+              read next mas
+
+           else (mas > sap)
+              report wrong data sap record added to SAP
+              read next sap
+	else
+	   read mas
+	   read sap
 
 end while
+
 if EOF MAS
     while not EOF SAP
-        report sap record not found
+        report wrong data sap record added to SAP
 
 else if EOF SAP
     while not EOF MAS
-        report mas record not found current record
-     *
-     *
+        rprint record # not in SAP
      * */
     return 0;
 }
