@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "idoc.h"
 
 /*
@@ -70,6 +71,51 @@ size_t strlcpy_spdl(char *dst, const char *src, size_t dsize) {
     return (src - osrc - 1);    /* count does not include NUL */
 }
 
+int equals_blanktif(char *str) {
+
+    char blank[] = "blank-01.tif";
+
+    if ((str == NULL) || strlen(str) == 0)
+        return 0;
+
+    int length = (strlen(blank) < strlen(str) ? strlen(blank) : strlen(str));
+
+    for (int i = 0; i < length; i++) {
+        if (blank[i] != tolower(str[i]))
+            return 0;
+    }
+
+    return 1;
+}
+
+int equals_no(char *field) {
+    return ((strcasecmp(field, "N") == 0) || (strcasecmp(field, "NO") == 0));
+}
+
+int comparator(const void *p, const void *q) {
+    Idoc_row *l = (Idoc_row *)p;
+    Idoc_row *r = (Idoc_row *)q;
+
+    if (strcmp(l->pcode, r->pcode) < 0)
+        return -1;
+    else if (strcmp(l->pcode, r->pcode) > 0)
+        return 1;
+    else if (strcmp(l->label, r->label) < 0)
+        return -1;
+    else if (strcmp(l->label, r->label) > 0)
+        return 1;
+    else if (strcmp(l->attr_name, r->attr_name) < 0)
+        return -1;
+    else if (strcmp(l->attr_name, r->attr_name) > 0)
+        return 1;
+    else if (strcmp(l->attr_val, r->attr_val) < 0)
+        return -1;
+    else if (strcmp(l->attr_val, r->attr_val) > 0)
+        return 1;
+    else
+        return 0;
+}
+
 char *get_value(char *line) {
 
     char *lpos, *str;
@@ -102,6 +148,9 @@ Idoc_row *read_idoc(int *num_lines, FILE *fp) {
     int capacity = START_SIZE;
     char current_pcode[MED] = {};
     char current_label[LBL] = {};
+    char current_attname[MED] = {};
+
+    char *pvalue;
     char *tmp;
     char *tdline = (char *)calloc(1, sizeof(char));
     size_t total_len = 0;
@@ -120,6 +169,9 @@ Idoc_row *read_idoc(int *num_lines, FILE *fp) {
             strlcpy(idoc[n].label, current_label, LBL);
             strcpy(idoc[n].attr_name, "TDLINE");
             idoc[n].attr_val = tdline;
+            //free(tdline);
+            total_len = 0;
+            tdline = (char *)calloc(1, sizeof(char));
             n++;
             strcpy(prev_linetype, linetype);
         } else
@@ -135,17 +187,24 @@ Idoc_row *read_idoc(int *num_lines, FILE *fp) {
             line[TDLINE_START + TDLINE_RIGHT_EDGE] = '\0';
             tmp = get_value(line + TDLINE_START);
             total_len += strlen(tmp);
-            tdline = (char *) realloc(tdline, total_len);
+            tdline = (char *) realloc(tdline, total_len + 1);
             strcat(tdline, tmp);
 
         } else if (strcmp(linetype, DESCR) == 0) {
-            strlcpy(idoc[n].pcode, current_pcode, MED);
-            strlcpy(idoc[n].label, current_label, LBL);
-            strlcpy_spdl(idoc[n].attr_name, line + ATTR_NAME, MED);
-
             line[VALUE_START + RIGHT_MOST_EDGE] = '\0';
-            idoc[n].attr_val = get_value(line + VALUE_START);
-            n++;
+            pvalue = get_value(line + VALUE_START);
+            strlcpy_spdl(current_attname, line + ATTR_NAME, MED);
+
+            if ((strcmp(current_attname, "STERILITYTYPE") == 0) ||
+                (!equals_blanktif(pvalue) && (!equals_no(pvalue)))) {
+                strlcpy(idoc[n].pcode, current_pcode, MED);
+                strlcpy(idoc[n].label, current_label, LBL);
+                strlcpy(idoc[n].attr_name, current_attname, MED);
+
+                idoc[n].attr_val = get_value(line + VALUE_START);
+
+                n++;
+            }
         }
 
         if (n == capacity) {

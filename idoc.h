@@ -36,4 +36,7 @@ size_t strlcpy_spdl(char *dst, const char *src, size_t dsize);
 
 Idoc_row *read_idoc(int *n, FILE *fp);
 
+int comparator(const void *p, const void *q);
+
+
 #endif //IDCOMPARE_IDOC_H
