@@ -71,6 +71,49 @@ size_t strlcpy_spdl(char *dst, const char *src, size_t dsize) {
     return (src - osrc - 1);    /* count does not include NUL */
 }
 
+int compare(FILE *fpout, Idoc_row *master, int mrows, Idoc_row *sap, int srows) {
+
+    int mpos = 0;
+    int spos = 0;
+
+    /* report
+     	read mas
+	read sap
+while not EOF MAS and not EOF SAP */
+    while ((mpos < mrows) && (spos < srows)) {
+
+        if (comparator(master + mpos, sap + spos) != 0)
+            printf("compared %s and %s with result %d\n", (master + mpos)->attr_name, (sap + spos)->attr_name, comparator(master + mpos, sap + spos));
+        else
+            printf("compared %s and %s with result %d\n", (master + mpos)->attr_name, (sap + spos)->attr_name, comparator(master + mpos, sap + spos));
+
+        mpos++;
+        spos++;
+    }
+/*	if mas <> sap
+           if mas < sap:
+	      print record # not in SAP
+              read next mas
+
+           else (mas > sap)
+              report wrong data sap record added to SAP
+              read next sap
+	else
+	   read mas
+	   read sap
+
+end while
+
+if EOF MAS
+    while not EOF SAP
+        report wrong data sap record added to SAP
+
+else if EOF SAP
+    while not EOF MAS
+        rprint record # not in SAP
+     * */
+}
+
 int equals_blanktif(char *str) {
 
     char blank[] = "blank-01.tif";
@@ -216,5 +259,3 @@ Idoc_row *read_idoc(int *num_lines, FILE *fp) {
     *num_lines = n;
     return idoc;
 }
-
-int compare(FILE fpout, Idoc_row *master, Idoc_row *sap);

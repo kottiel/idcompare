@@ -53,6 +53,10 @@ int main(int argc, char *argv[]) {
                 master[i].attr_val);
     fclose(fpout);
 
+    fpout = stdout;
+
+    compare(fpout, master, master_numlines, sap, sap_numlines);
+
     for (int i = 0; i < sap_numlines; i++) {
         free(sap[i].attr_val);
     }

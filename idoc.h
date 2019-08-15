@@ -38,5 +38,7 @@ Idoc_row *read_idoc(int *n, FILE *fp);
 
 int comparator(const void *p, const void *q);
 
+int compare(FILE *fpout, Idoc_row *master, int mrows, Idoc_row *sap, int srows);
+
 
 #endif //IDCOMPARE_IDOC_H
