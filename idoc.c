@@ -76,42 +76,40 @@ int compare(FILE *fpout, Idoc_row *master, int mrows, Idoc_row *sap, int srows) 
     int mpos = 0;
     int spos = 0;
 
-    /* report
-     	read mas
-	read sap
-while not EOF MAS and not EOF SAP */
     while ((mpos < mrows) && (spos < srows)) {
-
-        if (comparator(master + mpos, sap + spos) != 0)
-            printf("compared %s and %s with result %d\n", (master + mpos)->attr_name, (sap + spos)->attr_name, comparator(master + mpos, sap + spos));
-        else
-            printf("compared %s and %s with result %d\n", (master + mpos)->attr_name, (sap + spos)->attr_name, comparator(master + mpos, sap + spos));
-
-        mpos++;
-        spos++;
+        int result = (comparator(master + mpos, sap + spos));
+        if (result != 0) {
+            if (result < 0) {
+                printf("%s %s %s %s not in SAP\n", (master + mpos)->pcode, (master + mpos)->label,
+                       (master + mpos)->attr_name, (master + mpos)->attr_val);
+                mpos++;
+            } else if (result > 0) {
+                printf("wrong data %s %s %s %s added to SAP\n", (master + mpos)->pcode, (master + mpos)->label,
+                       (master + mpos)->attr_name, (master + mpos)->attr_val);
+                spos++;
+            } else {
+                mpos++;
+                spos++;
+            }
+        } else {
+            mpos++;
+            spos++;
+        }
     }
-/*	if mas <> sap
-           if mas < sap:
-	      print record # not in SAP
-              read next mas
 
-           else (mas > sap)
-              report wrong data sap record added to SAP
-              read next sap
-	else
-	   read mas
-	   read sap
-
-end while
-
-if EOF MAS
-    while not EOF SAP
-        report wrong data sap record added to SAP
-
-else if EOF SAP
-    while not EOF MAS
-        rprint record # not in SAP
-     * */
+    if (mpos == mrows) {
+        while (spos < srows) {
+            printf("wrong data %s %s %s %s added to SAP\n", (master + mpos)->pcode, (master + mpos)->label,
+                   (master + mpos)->attr_name, (master + mpos)->attr_val);
+            spos++;
+        }
+    } else if (spos == srows) {
+        while (mpos < mrows) {
+            printf("%s %s %s %s not in SAP\n", (master + mpos)->pcode, (master + mpos)->label,
+                   (master + mpos)->attr_name, (master + mpos)->attr_val);
+            mpos++;
+        }
+    }
 }
 
 int equals_blanktif(char *str) {
@@ -139,21 +137,21 @@ int comparator(const void *p, const void *q) {
     Idoc_row *l = (Idoc_row *)p;
     Idoc_row *r = (Idoc_row *)q;
 
-    if (strcmp(l->pcode, r->pcode) < 0)
+    if (strcasecmp(l->pcode, r->pcode) < 0)
         return -1;
-    else if (strcmp(l->pcode, r->pcode) > 0)
+    else if (strcasecmp(l->pcode, r->pcode) > 0)
         return 1;
-    else if (strcmp(l->label, r->label) < 0)
+    else if (strcasecmp(l->label, r->label) < 0)
         return -1;
-    else if (strcmp(l->label, r->label) > 0)
+    else if (strcasecmp(l->label, r->label) > 0)
         return 1;
-    else if (strcmp(l->attr_name, r->attr_name) < 0)
+    else if (strcasecmp(l->attr_name, r->attr_name) < 0)
         return -1;
-    else if (strcmp(l->attr_name, r->attr_name) > 0)
+    else if (strcasecmp(l->attr_name, r->attr_name) > 0)
         return 1;
-    else if (strcmp(l->attr_val, r->attr_val) < 0)
+    else if (strcasecmp(l->attr_val, r->attr_val) < 0)
         return -1;
-    else if (strcmp(l->attr_val, r->attr_val) > 0)
+    else if (strcasecmp(l->attr_val, r->attr_val) > 0)
         return 1;
     else
         return 0;

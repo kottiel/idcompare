@@ -72,32 +72,5 @@ int main(int argc, char *argv[]) {
     double elapsed = (double) (stop - start) / CLOCKS_PER_SEC;
     printf("\nTime elapsed: %.5f\n", elapsed);
 
-    /* report
-     	read mas
-	read sap
-while not EOF MAS and not EOF SAP
-
-	if mas <> sap
-           if mas < sap:
-	      print record # not in SAP
-              read next mas
-
-           else (mas > sap)
-              report wrong data sap record added to SAP
-              read next sap
-	else
-	   read mas
-	   read sap
-
-end while
-
-if EOF MAS
-    while not EOF SAP
-        report wrong data sap record added to SAP
-
-else if EOF SAP
-    while not EOF MAS
-        rprint record # not in SAP
-     * */
     return 0;
 }
