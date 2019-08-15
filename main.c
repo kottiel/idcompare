@@ -11,8 +11,8 @@ int main(int argc, char *argv[]) {
 
     FILE *fpSAP, *fpMaster, *fpout;
 
-    int sap_numlines = 0;
-    int master_numlines = 0;
+    size_t sap_numlines = 0;
+    size_t master_numlines = 0;
 
     Idoc_row *sap;
     Idoc_row *master;
@@ -29,40 +29,50 @@ int main(int argc, char *argv[]) {
 
     sap = read_idoc(&sap_numlines, fpSAP);
     qsort(sap, sap_numlines, sizeof(Idoc_row), comparator);
-    printf("Processed %d lines in the SAP extract...\n", sap_numlines);
 
-    fpout = fopen("sap_out.txt", "w");
+
+    printf("Processed %d lines in the SAP extract...\n", (int)sap_numlines);
+
+    if ((fpout = fopen("sap_out.txt", "w")) == NULL) {
+        printf("Problem opening sap_out.txt.\n");
+        return EXIT_FAILURE;
+    }
     for (int i = 0; i < sap_numlines; i++)
         fprintf(fpout, "%-15s %9s %-28s %s\n", sap[i].pcode, sap[i].label, sap[i].attr_name, sap[i].attr_val);
     fclose(fpout);
-
-
 
     if ((fpMaster = fopen(argv[2], "r")) == NULL) {
         printf("File not found.\n");
         return EXIT_FAILURE;
     }
 
-    fpout = fopen("master_out.txt", "w");
+    if ((fpout = fopen("master_out.txt", "w")) == NULL) {
+        printf("Problem opening master_out.txt.\n");
+        return EXIT_FAILURE;
+    }
+
     master = read_idoc(&master_numlines, fpMaster);
     qsort(master, master_numlines, sizeof(Idoc_row), comparator);
 
-    printf("Processed %d lines in the Master idoc...\n", master_numlines);
+    printf("Processed %d lines in the Master idoc...\n", (int)master_numlines);
     for (int i = 0; i < master_numlines; i++)
         fprintf(fpout, "%-15s %9s %-28s %s\n", master[i].pcode, master[i].label, master[i].attr_name,
                 master[i].attr_val);
     fclose(fpout);
 
-    fpout = stdout;
+    if ((fpout = fopen("IDoc Error File.txt", "w")) == NULL) {
+        printf("Problem opening Idoc Error File.\n");
+        return EXIT_FAILURE;
+    }
 
     compare(fpout, master, master_numlines, sap, sap_numlines);
 
-    for (int i = 0; i < sap_numlines; i++) {
-        free(sap[i].attr_val);
-    }
-
     for (int i = 0; i < master_numlines; i++) {
         free(master[i].attr_val);
+    }
+
+    for (int i = 0; i < sap_numlines; i++) {
+        free(sap[i].attr_val);
     }
 
     free(sap);

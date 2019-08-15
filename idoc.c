@@ -17,7 +17,7 @@
  *
  * Copy string src to buffer dst of size dsize.  At most dsize-1
  * chars will be copied.  Always NUL terminates (unless dsize == 0).
- * Returns strlen(src); if retval >= dsize, truncation occurred.
+ * Returns strlen(src); if return value >= dsize, truncation occurred.
  */
 size_t strlcpy(char *dst, const char *src, size_t dsize) {
     const char *osrc = src;
@@ -71,21 +71,22 @@ size_t strlcpy_spdl(char *dst, const char *src, size_t dsize) {
     return (src - osrc - 1);    /* count does not include NUL */
 }
 
-int compare(FILE *fpout, Idoc_row *master, int mrows, Idoc_row *sap, int srows) {
+int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t srows) {
 
     int mpos = 0;
     int spos = 0;
 
+    fprintf(fpout, "PCODE\tLabelNumber\tAttributeName\tDisplayValue\tErrorMessage\n");
     while ((mpos < mrows) && (spos < srows)) {
         int result = (comparator(master + mpos, sap + spos));
         if (result != 0) {
             if (result < 0) {
-                printf("%s %s %s %s not in SAP\n", (master + mpos)->pcode, (master + mpos)->label,
+                fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n", (master + mpos)->pcode, (master + mpos)->label,
                        (master + mpos)->attr_name, (master + mpos)->attr_val);
                 mpos++;
             } else if (result > 0) {
-                printf("wrong data %s %s %s %s added to SAP\n", (master + mpos)->pcode, (master + mpos)->label,
-                       (master + mpos)->attr_name, (master + mpos)->attr_val);
+                fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Wrong Data Added\n", (sap + spos)->pcode, (sap + spos)->label,
+                       (sap + spos)->attr_name, (sap + spos)->attr_val);
                 spos++;
             } else {
                 mpos++;
@@ -99,13 +100,13 @@ int compare(FILE *fpout, Idoc_row *master, int mrows, Idoc_row *sap, int srows) 
 
     if (mpos == mrows) {
         while (spos < srows) {
-            printf("wrong data %s %s %s %s added to SAP\n", (master + mpos)->pcode, (master + mpos)->label,
-                   (master + mpos)->attr_name, (master + mpos)->attr_val);
+            fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Wrong Data Added\n", (sap + spos)->pcode, (sap + spos)->label,
+                   (sap + spos)->attr_name, (sap + spos)->attr_val);
             spos++;
         }
     } else if (spos == srows) {
         while (mpos < mrows) {
-            printf("%s %s %s %s not in SAP\n", (master + mpos)->pcode, (master + mpos)->label,
+            fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n", (master + mpos)->pcode, (master + mpos)->label,
                    (master + mpos)->attr_name, (master + mpos)->attr_val);
             mpos++;
         }
@@ -119,7 +120,7 @@ int equals_blanktif(char *str) {
     if ((str == NULL) || strlen(str) == 0)
         return 0;
 
-    int length = (strlen(blank) < strlen(str) ? strlen(blank) : strlen(str));
+    int length = (int)(strlen(blank) < strlen(str) ? strlen(blank) : strlen(str));
 
     for (int i = 0; i < length; i++) {
         if (blank[i] != tolower(str[i]))
@@ -179,7 +180,7 @@ char *get_value(char *line) {
     return str;
 }
 
-Idoc_row *read_idoc(int *num_lines, FILE *fp) {
+Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
 
     char linetype[TYPE]      = {};
     char prev_linetype[TYPE] = {};
@@ -254,6 +255,6 @@ Idoc_row *read_idoc(int *num_lines, FILE *fp) {
         }
     }
 
-    *num_lines = n;
+    *num_lines = (size_t) n;
     return idoc;
 }

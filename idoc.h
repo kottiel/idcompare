@@ -34,11 +34,11 @@ size_t strlcpy(char *dst, const char *src, size_t dsize);
 
 size_t strlcpy_spdl(char *dst, const char *src, size_t dsize);
 
-Idoc_row *read_idoc(int *n, FILE *fp);
+Idoc_row *read_idoc(size_t *n, FILE *fp);
 
 int comparator(const void *p, const void *q);
 
-int compare(FILE *fpout, Idoc_row *master, int mrows, Idoc_row *sap, int srows);
+int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t srows);
 
 
 #endif //IDCOMPARE_IDOC_H
