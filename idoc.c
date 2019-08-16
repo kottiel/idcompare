@@ -146,10 +146,10 @@ int comparator(const void *p, const void *q) {
         return -1;
     else if (strcasecmp(l->label, r->label) > 0)
         return 1;
-    else if (strcasecmp(l->attr_name, r->attr_name) < 0)
-        return -1;
-    else if (strcasecmp(l->attr_name, r->attr_name) > 0)
-        return 1;
+    //else if (strcasecmp(l->attr_name, r->attr_name) < 0)
+    //    return -1;
+    //else if (strcasecmp(l->attr_name, r->attr_name) > 0)
+    //    return 1;
     else if (strcasecmp(l->attr_val, r->attr_val) < 0)
         return -1;
     else if (strcasecmp(l->attr_val, r->attr_val) > 0)
@@ -174,7 +174,9 @@ char *get_value(char *line) {
 
     length = rpos - lpos++;
 
-    str = (char *)malloc(length + 1);
+    if ((str = (char *)malloc(length + 1)) == NULL) {
+        return NULL;
+    }
     strlcpy(str, lpos, length + 1);
     str[length] = '\0';
     return str;
@@ -194,10 +196,18 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
 
     char *pvalue;
     char *tmp;
-    char *tdline = (char *)calloc(1, sizeof(char));
+    char *tdline;
+    if ((tdline = (char *)calloc(1, sizeof(char))) == NULL) {
+        fprintf(stderr, "Memory error in initial allocation of tdline.\n");
+        return NULL;
+    }
     size_t total_len = 0;
 
-    Idoc_row *idoc = (Idoc_row *)malloc((START_SIZE) * sizeof(Idoc_row));
+    Idoc_row *idoc;
+    if ((idoc = (Idoc_row *)malloc((START_SIZE) * sizeof(Idoc_row))) == NULL) {
+        fprintf(stderr, "Error in initial allocation of memory for idoc file.\n");
+        return NULL;
+    }
 
     // read and discard first idoc line
     fgets(line, MAX_ROW_LEN - 1, fp);
@@ -227,14 +237,20 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
 
         } else if (strcmp(linetype, TDLINE) == 0) {
             line[TDLINE_START + TDLINE_RIGHT_EDGE] = '\0';
-            tmp = get_value(line + TDLINE_START);
+            if ((tmp = get_value(line + TDLINE_START)) == NULL) {
+                fprintf(stderr, "Error allocating memory for TDLINE attribute value.\n");
+                return NULL;
+            }
             total_len += strlen(tmp);
             tdline = (char *) realloc(tdline, total_len + 1);
             strcat(tdline, tmp);
 
         } else if (strcmp(linetype, DESCR) == 0) {
             line[VALUE_START + RIGHT_MOST_EDGE] = '\0';
-            pvalue = get_value(line + VALUE_START);
+            if ((pvalue = get_value(line + VALUE_START)) == NULL) {
+                fprintf(stderr, "Error allocating memory for regular (non-TDLINE) attribute value.\n");
+                return NULL;
+            }
             strlcpy_spdl(current_attname, line + ATTR_NAME, MED);
 
             if ((strcmp(current_attname, "STERILITYTYPE") == 0) ||
@@ -243,7 +259,12 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
                 strlcpy(idoc[n].label, current_label, LBL);
                 strlcpy(idoc[n].attr_name, current_attname, MED);
 
-                idoc[n].attr_val = get_value(line + VALUE_START);
+                char *attr_val = get_value(line + VALUE_START);
+                if (attr_val == NULL) {
+                    fprintf(stderr, "Error allocating memory for STERILITYTYPE attribute value.\n");
+                    return NULL;
+                } else
+                    idoc[n].attr_val = attr_val;
 
                 n++;
             }
@@ -251,7 +272,11 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
 
         if (n == capacity) {
             capacity *= 2;
-            idoc = (Idoc_row *)realloc(idoc, (capacity) * sizeof(Idoc_row));
+            if ((idoc = (Idoc_row *)realloc(idoc, (capacity) * sizeof(Idoc_row))) == NULL) {
+                fprintf(stderr, "Error allocating memory for idoc file.\n");
+                return NULL;
+            }
+
         }
     }
 
