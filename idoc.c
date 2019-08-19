@@ -82,11 +82,11 @@ int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t s
         if (result != 0) {
             if (result < 0) {
                 fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n", (master + mpos)->pcode, (master + mpos)->label,
-                       (master + mpos)->attr_name, (master + mpos)->attr_val);
+                        (master + mpos)->attr_name, (master + mpos)->attr_val);
                 mpos++;
             } else if (result > 0) {
                 fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Wrong Data Added\n", (sap + spos)->pcode, (sap + spos)->label,
-                       (sap + spos)->attr_name, (sap + spos)->attr_val);
+                        (sap + spos)->attr_name, (sap + spos)->attr_val);
                 spos++;
             } else {
                 mpos++;
@@ -101,13 +101,13 @@ int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t s
     if (mpos == mrows) {
         while (spos < srows) {
             fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Wrong Data Added\n", (sap + spos)->pcode, (sap + spos)->label,
-                   (sap + spos)->attr_name, (sap + spos)->attr_val);
+                    (sap + spos)->attr_name, (sap + spos)->attr_val);
             spos++;
         }
     } else if (spos == srows) {
         while (mpos < mrows) {
             fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n", (master + mpos)->pcode, (master + mpos)->label,
-                   (master + mpos)->attr_name, (master + mpos)->attr_val);
+                    (master + mpos)->attr_name, (master + mpos)->attr_val);
             mpos++;
         }
     }
@@ -120,7 +120,7 @@ int equals_blanktif(char *str) {
     if ((str == NULL) || strlen(str) == 0)
         return 0;
 
-    int length = (int)(strlen(blank) < strlen(str) ? strlen(blank) : strlen(str));
+    int length = (int) (strlen(blank) < strlen(str) ? strlen(blank) : strlen(str));
 
     for (int i = 0; i < length; i++) {
         if (blank[i] != tolower(str[i]))
@@ -135,8 +135,8 @@ int equals_no(char *field) {
 }
 
 int comparator(const void *p, const void *q) {
-    Idoc_row *l = (Idoc_row *)p;
-    Idoc_row *r = (Idoc_row *)q;
+    Idoc_row *l = (Idoc_row *) p;
+    Idoc_row *r = (Idoc_row *) q;
 
     if (strcasecmp(l->pcode, r->pcode) < 0)
         return -1;
@@ -146,10 +146,6 @@ int comparator(const void *p, const void *q) {
         return -1;
     else if (strcasecmp(l->label, r->label) > 0)
         return 1;
-    //else if (strcasecmp(l->attr_name, r->attr_name) < 0)
-    //    return -1;
-    //else if (strcasecmp(l->attr_name, r->attr_name) > 0)
-    //    return 1;
     else if (strcasecmp(l->attr_val, r->attr_val) < 0)
         return -1;
     else if (strcasecmp(l->attr_val, r->attr_val) > 0)
@@ -174,17 +170,19 @@ char *get_value(char *line) {
 
     length = rpos - lpos++;
 
-    if ((str = (char *)malloc(length + 1)) == NULL) {
+    if ((str = (char *) malloc(length + 1)) == NULL) {
         return NULL;
     }
     strlcpy(str, lpos, length + 1);
     str[length] = '\0';
+
     return str;
+
 }
 
 Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
 
-    char linetype[TYPE]      = {};
+    char linetype[TYPE] = {};
     char prev_linetype[TYPE] = {};
 
     char line[MAX_ROW_LEN] = {};
@@ -197,33 +195,39 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
     char *pvalue;
     char *tmp;
     char *tdline;
-    if ((tdline = (char *)calloc(1, sizeof(char))) == NULL) {
+    if ((tdline = (char *) calloc(1, sizeof(char))) == NULL) {
         fprintf(stderr, "Memory error in initial allocation of tdline.\n");
         return NULL;
     }
     size_t total_len = 0;
 
     Idoc_row *idoc;
-    if ((idoc = (Idoc_row *)malloc((START_SIZE) * sizeof(Idoc_row))) == NULL) {
+    if ((idoc = (Idoc_row *) malloc((START_SIZE) * sizeof(Idoc_row))) == NULL) {
         fprintf(stderr, "Error in initial allocation of memory for idoc file.\n");
         return NULL;
     }
 
     // read and discard first idoc line
-    fgets(line, MAX_ROW_LEN - 1, fp);
+    fgets(line, MAX_ROW_LEN, fp);
 
-    while (fgets(line, MAX_ROW_LEN - 1, fp) != NULL) {
+    /*int i = 0;
+    while (i++ < 3) {
+        fgets(line, MAX_ROW_LEN, fp) != NULL;
+    }*/
+
+    while (fgets(line, MAX_ROW_LEN, fp) != NULL) {
 
         strlcpy(linetype, line + ID_START, TYPE);
 
+        // process a batch of TDLINE rows into a single TDLINE row
         if ((strcmp(prev_linetype, TDLINE) == 0) && (strcmp(linetype, prev_linetype) != 0)) {
             strlcpy(idoc[n].pcode, current_pcode, MED);
             strlcpy(idoc[n].label, current_label, LBL);
             strcpy(idoc[n].attr_name, "TDLINE");
             idoc[n].attr_val = tdline;
-            //free(tdline);
+
             total_len = 0;
-            tdline = (char *)calloc(1, sizeof(char));
+            tdline = (char *) calloc(1, sizeof(char));
             n++;
             strcpy(prev_linetype, linetype);
         } else
@@ -244,6 +248,7 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             total_len += strlen(tmp);
             tdline = (char *) realloc(tdline, total_len + 1);
             strcat(tdline, tmp);
+            tdline[total_len] = '\0';
 
         } else if (strcmp(linetype, DESCR) == 0) {
             line[VALUE_START + RIGHT_MOST_EDGE] = '\0';
@@ -259,20 +264,20 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
                 strlcpy(idoc[n].label, current_label, LBL);
                 strlcpy(idoc[n].attr_name, current_attname, MED);
 
-                char *attr_val = get_value(line + VALUE_START);
+                char *attr_val = pvalue;
                 if (attr_val == NULL) {
                     fprintf(stderr, "Error allocating memory for STERILITYTYPE attribute value.\n");
                     return NULL;
-                } else
+                } else {
                     idoc[n].attr_val = attr_val;
-
+                }
                 n++;
             }
         }
 
         if (n == capacity) {
             capacity *= 2;
-            if ((idoc = (Idoc_row *)realloc(idoc, (capacity) * sizeof(Idoc_row))) == NULL) {
+            if ((idoc = (Idoc_row *) realloc(idoc, (capacity) * sizeof(Idoc_row))) == NULL) {
                 fprintf(stderr, "Error allocating memory for idoc file.\n");
                 return NULL;
             }

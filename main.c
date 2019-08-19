@@ -22,57 +22,72 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    /* process the master (verified IDoc file)                                       */
     if ((fpMaster = fopen(argv[1], "r")) == NULL) {
         printf("File not found.\n");
         return EXIT_FAILURE;
+    } else
+        printf("Opened verified IDoc file \"%-35s\" ", argv[1]);
+
+    if ((master = read_idoc(&master_numlines, fpMaster)) == NULL) {
+        return EXIT_FAILURE;
     }
-
-    master = read_idoc(&master_numlines, fpMaster);
     qsort(master, master_numlines, sizeof(Idoc_row), comparator);
-
-
-    printf("Processed %d lines in the Master extract...\n", (int)master_numlines);
+    printf("and processed %d lines.\n", (int)master_numlines);
 
     if ((fpout = fopen("master_out.txt", "w")) == NULL) {
         printf("Problem opening master_out.txt.\n");
         return EXIT_FAILURE;
     }
+
     for (int i = 0; i < master_numlines; i++)
-        fprintf(fpout, "%-15s %9s %-28s %s\n", master[i].pcode, master[i].label, master[i].attr_name, master[i].attr_val);
+        fprintf(fpout, "%-15s %9s %-28s %s\n", master[i].pcode,
+                                               master[i].label,
+                                               master[i].attr_name,
+                                               master[i].attr_val);
     fclose(fpout);
 
+    /* process the SAP extract(s)                                                    */
     if ((fpSAP = fopen(argv[2], "r")) == NULL) {
         printf("File not found.\n");
         return EXIT_FAILURE;
+    } else
+        printf("Opened SAP extract file   \"%-35s\" ", argv[2]);
+
+    if ((sap = read_idoc(&sap_numlines, fpSAP)) == NULL) {
+        printf("Failed to read label extract.\n");
+        return EXIT_FAILURE;
     }
+    qsort(sap, sap_numlines, sizeof(Idoc_row), comparator);
+    printf("and processed %d lines.\n", (int)sap_numlines);
 
     if ((fpout = fopen("sap_out.txt", "w")) == NULL) {
         printf("Problem opening sap_out.txt.\n");
         return EXIT_FAILURE;
     }
-
-    sap = read_idoc(&sap_numlines, fpSAP);
-    qsort(sap, sap_numlines, sizeof(Idoc_row), comparator);
-
-    printf("Processed %d lines in the SAP idoc...\n", (int)sap_numlines);
     for (int i = 0; i < sap_numlines; i++)
-        fprintf(fpout, "%-15s %9s %-28s %s\n", sap[i].pcode, sap[i].label, sap[i].attr_name,
-                sap[i].attr_val);
+        fprintf(fpout, "%-15s %9s %-28s %s\n", sap[i].pcode,
+                                               sap[i].label,
+                                               sap[i].attr_name,
+                                               sap[i].attr_val);
     fclose(fpout);
 
+    /* print IDoc Error File                                                         */
     if ((fpout = fopen("IDoc Error File.txt", "w")) == NULL) {
         printf("Problem opening Idoc Error File.\n");
         return EXIT_FAILURE;
     }
 
     compare(fpout, master, master_numlines, sap, sap_numlines);
+    fclose(fpout);
 
+    /* free dynamically allocated memory                                             */
     for (int i = 0; i < master_numlines; i++) {
         free(master[i].attr_val);
     }
-
     for (int i = 0; i < sap_numlines; i++) {
-        free(sap[i].attr_val);
+        if (sap[i].attr_val != NULL)
+            free(sap[i].attr_val);
     }
 
     free(sap);
