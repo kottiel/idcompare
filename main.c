@@ -10,6 +10,8 @@ int main(int argc, char *argv[]) {
     clock_t start = clock();
 
     FILE *fpMaster, *fpSAP, *fpout;
+    char dconame[11];
+    char errorfile[33];
 
     size_t master_numlines = 0;
     size_t sap_numlines = 0;
@@ -26,9 +28,10 @@ int main(int argc, char *argv[]) {
     if ((fpMaster = fopen(argv[1], "r")) == NULL) {
         printf("File not found.\n");
         return EXIT_FAILURE;
-    } else
+    } else {
+        strlcpy(dconame, argv[1], 11);
         printf("Opened verified IDoc file \"%-35s\" ", argv[1]);
-
+    }
     if ((master = read_idoc(&master_numlines, fpMaster)) == NULL) {
         return EXIT_FAILURE;
     }
@@ -73,7 +76,10 @@ int main(int argc, char *argv[]) {
     fclose(fpout);
 
     /* print IDoc Error File                                                         */
-    if ((fpout = fopen("IDoc Error File.txt", "w")) == NULL) {
+    strlcpy(errorfile, "IDoc Error File - ", 18);
+    strncat(errorfile, dconame, 11);
+    strncat(errorfile, ".txt", 5);
+    if ((fpout = fopen(errorfile, "w")) == NULL) {
         printf("Problem opening Idoc Error File.\n");
         return EXIT_FAILURE;
     }

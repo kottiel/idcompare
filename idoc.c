@@ -220,7 +220,7 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
         strlcpy(linetype, line + ID_START, TYPE);
 
         // process a batch of TDLINE rows into a single TDLINE row
-        if ((strcmp(prev_linetype, TDLINE) == 0) && (strcmp(linetype, prev_linetype) != 0)) {
+/*        if ((strcmp(prev_linetype, TDLINE) == 0) && (strcmp(linetype, prev_linetype) != 0)) {
             strlcpy(idoc[n].pcode, current_pcode, MED);
             strlcpy(idoc[n].label, current_label, LBL);
             strcpy(idoc[n].attr_name, "TDLINE");
@@ -231,7 +231,7 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             n++;
             strcpy(prev_linetype, linetype);
         } else
-            strcpy(prev_linetype, linetype);
+            strcpy(prev_linetype, linetype);*/
 
         if (strcmp(linetype, MATNR) == 0) {
             strlcpy_spdl(current_pcode, line + ATTR_NAME, MED);
@@ -246,8 +246,8 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
                 return NULL;
             }
             total_len += strlen(tmp);
-            tdline = (char *) realloc(tdline, total_len + 1);
-            strcat(tdline, tmp);
+            tdline = (char *) realloc(tdline, total_len + 100);
+            strncat(tdline, tmp, total_len + 1);
             tdline[total_len] = '\0';
 
         } else if (strcmp(linetype, DESCR) == 0) {
