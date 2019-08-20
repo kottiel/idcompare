@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     strlcpy(errorfile, "IDoc Error File - ", 20);
     strncat(errorfile, dconame, 11);
     strncat(errorfile, ".txt", 5);
-    printf("Writing error file to %s\n", errorfile);
+    printf("Creating error file %s\n", errorfile);
     if ((fpout = fopen(errorfile, "wb")) == NULL) {
         printf("Problem opening %s\n", errorfile);
         return EXIT_FAILURE;

@@ -41,5 +41,8 @@ int comparator(const void *p, const void *q);
 
 int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t srows);
 
+int equals_blanktif(char *str);
+
+int equals_no(char *field);
 
 #endif //IDCOMPARE_IDOC_H

@@ -252,14 +252,18 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             }
             strlcpy_spdl(current_attname, line + ATTR_NAME, MED);
 
-            if  ((!equals_blanktif(pvalue)) && (!equals_no(pvalue))) {
+            if ((strcmp(current_attname, "STERILITYTYPE") == 0) ||
+                 (!equals_blanktif(pvalue)                  &&
+                 (!equals_no(pvalue))                       &&
+                 (strcmp(current_attname, "BOMLEVEL") != 0) &&
+                 (strcmp(current_attname, "PLANT") != 0))) {
                 strlcpy(idoc[n].pcode, current_pcode, MED);
                 strlcpy(idoc[n].label, current_label, LBL);
                 strlcpy(idoc[n].attr_name, current_attname, MED);
 
                 char *attr_val = pvalue;
                 if (attr_val == NULL) {
-                    fprintf(stderr, "Error allocating memory for attribute value.\n");
+                    fprintf(stderr, "Error allocating memory for STERILITYTYPE attribute value.\n");
                     return NULL;
                 } else {
                     idoc[n].attr_val = attr_val;
