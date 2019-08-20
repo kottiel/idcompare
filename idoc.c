@@ -186,7 +186,8 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
     char prev_linetype[TYPE] = {};
 
     char line[MAX_ROW_LEN] = {};
-    int n = 0;
+    size_t n = 0;
+    size_t actual_linenums = 1;
     int capacity = START_SIZE;
     char current_pcode[MED] = {};
     char current_label[LBL] = {};
@@ -207,20 +208,12 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
         return NULL;
     }
 
-    // read and discard first idoc line
-    fgets(line, MAX_ROW_LEN, fp);
-
-    /*int i = 0;
-    while (i++ < 3) {
-        fgets(line, MAX_ROW_LEN, fp) != NULL;
-    }*/
-
     while (fgets(line, MAX_ROW_LEN, fp) != NULL) {
 
         strlcpy(linetype, line + ID_START, TYPE);
 
         // process a batch of TDLINE rows into a single TDLINE row
-/*        if ((strcmp(prev_linetype, TDLINE) == 0) && (strcmp(linetype, prev_linetype) != 0)) {
+        if ((strcmp(prev_linetype, TDLINE) == 0) && (strcmp(linetype, prev_linetype) != 0)) {
             strlcpy(idoc[n].pcode, current_pcode, MED);
             strlcpy(idoc[n].label, current_label, LBL);
             strcpy(idoc[n].attr_name, "TDLINE");
@@ -231,7 +224,7 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             n++;
             strcpy(prev_linetype, linetype);
         } else
-            strcpy(prev_linetype, linetype);*/
+            strcpy(prev_linetype, linetype);
 
         if (strcmp(linetype, MATNR) == 0) {
             strlcpy_spdl(current_pcode, line + ATTR_NAME, MED);
@@ -246,9 +239,10 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
                 return NULL;
             }
             total_len += strlen(tmp);
-            tdline = (char *) realloc(tdline, total_len + 100);
+            tdline = (char *) realloc(tdline, total_len + 2);
             strncat(tdline, tmp, total_len + 1);
             tdline[total_len] = '\0';
+            char *t = tdline;
 
         } else if (strcmp(linetype, DESCR) == 0) {
             line[VALUE_START + RIGHT_MOST_EDGE] = '\0';
@@ -258,15 +252,14 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             }
             strlcpy_spdl(current_attname, line + ATTR_NAME, MED);
 
-            if ((strcmp(current_attname, "STERILITYTYPE") == 0) ||
-                (!equals_blanktif(pvalue) && (!equals_no(pvalue)))) {
+            if  ((!equals_blanktif(pvalue)) && (!equals_no(pvalue))) {
                 strlcpy(idoc[n].pcode, current_pcode, MED);
                 strlcpy(idoc[n].label, current_label, LBL);
                 strlcpy(idoc[n].attr_name, current_attname, MED);
 
                 char *attr_val = pvalue;
                 if (attr_val == NULL) {
-                    fprintf(stderr, "Error allocating memory for STERILITYTYPE attribute value.\n");
+                    fprintf(stderr, "Error allocating memory for attribute value.\n");
                     return NULL;
                 } else {
                     idoc[n].attr_val = attr_val;
@@ -275,7 +268,7 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             }
         }
 
-        if (n == capacity) {
+        if (n >= capacity - 1) {
             capacity *= 2;
             if ((idoc = (Idoc_row *) realloc(idoc, (capacity) * sizeof(Idoc_row))) == NULL) {
                 fprintf(stderr, "Error allocating memory for idoc file.\n");
@@ -283,8 +276,9 @@ Idoc_row *read_idoc(size_t *num_lines, FILE *fp) {
             }
 
         }
+        actual_linenums++;
     }
 
-    *num_lines = (size_t) n;
+    *num_lines = n;
     return idoc;
 }

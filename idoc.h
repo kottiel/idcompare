@@ -18,6 +18,7 @@
 #define ATTR_NAME          63
 #define START_SIZE         10
 #define ID_START            4
+
 #define MATNR            "MH"
 #define LABEL            "LH"
 #define TDLINE           "TX"
