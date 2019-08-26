@@ -103,6 +103,9 @@ int main(int argc, char *argv[]) {
         printf("Problem opening sap_out.txt.\n");
         return EXIT_FAILURE;
     }
+
+    printf("Ignoring \"BOMLEVEL,\" \"SIZELOGO,\" \"PLANT\"\n");
+
     for (int i = 0; i < sap_numlines; i++)
         fprintf(fpout, "%-15s %9s %-28s %s\n", sap[i].pcode,
                 sap[i].label,
