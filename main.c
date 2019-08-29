@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
 
     if (argc < 3) {
         printf("usage: %s verified_idoc.txt sap_extract1.txt sap_extract2.txt ... sap_extractN.txt\n", argv[0]);
+        fclose(fpMaster);
         return EXIT_FAILURE;
     } else if (argc > 3) {
 
@@ -45,6 +46,7 @@ int main(int argc, char *argv[]) {
             for (int i = 2; i < argc; i++) {
                 if ((fpSAPvar = fopen(argv[i], "r")) == NULL) {
                     printf("File 'argv[i]' could not be opened.\n");
+                    fclose(fpSAP);
                     return EXIT_FAILURE;
                 } else {
                     while (fgets(line, MAX_ROW_LEN, fpSAPvar) != NULL)
@@ -68,6 +70,7 @@ int main(int argc, char *argv[]) {
 
 
     if ((master = read_idoc(&master_numlines, fpMaster)) == NULL) {
+        fclose(fpSAP);
         return EXIT_FAILURE;
     }
     fclose(fpMaster);
@@ -93,6 +96,11 @@ int main(int argc, char *argv[]) {
     }
     fclose(fpSAP);
     qsort(sap, sap_numlines, sizeof(Idoc_row), comparator);
+    if (chkdups(sap, sap_numlines)) {
+        printf("Duplicate records in sap extracts - remove and try again.\n");
+        return EXIT_FAILURE;
+    }
+
     for (int i = 2; i < argc; i++) {
         printf("Opened SAP extract file \"%s\"%c", argv[i], (argc > 3 ? '\n' : ' '));
     }

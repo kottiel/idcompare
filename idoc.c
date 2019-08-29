@@ -124,6 +124,16 @@ int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t s
                 errors = true;
                 mpos++;
             } else {
+                while (strcmp(prevSAPLabel, (master + mpos)->label) == 0) {
+                    fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n",
+                            (master + mpos)->pcode,
+                            (master + mpos)->label,
+                            (master + mpos)->attr_name,
+                            (master + mpos)->attr_val);
+                    errors = true;
+                    mpos++;
+                }
+
                 while (strcmp(prevMasterLabel, (master + mpos)->label) == 0) {
                     if (strcmp((master + mpos)->attr_name, "TEMPLATENUMBER") == 0)
                         fprintf(fpout, "%s\t%s\t%s\t%s\tLabel not in Extract File!\n",
@@ -166,7 +176,7 @@ int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t s
         }
     }
     while (spos < srows) {
-        if (strcmp((master + mpos)->label, (sap + spos)->label) == 0) {
+        if (strcmp(curr_master_label, (sap + spos)->label) == 0) {
             fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Wrong data Added\n",
                     (sap + spos)->pcode,
                     (sap + spos)->label,
@@ -189,7 +199,7 @@ int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t s
         }
     }
     while (mpos < mrows) {
-        if (strcmp((master + mpos)->label, (sap + spos)->label) == 0) {
+        if (strcmp((master + mpos)->label, curr_sap_label) == 0) {
             fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n",
                     (master + mpos)->pcode,
                     (master + mpos)->label,
@@ -198,6 +208,18 @@ int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t s
             errors = true;
             mpos++;
         } else {
+
+            while (strcmp(prevSAPLabel, (master + mpos)->label) == 0) {
+                fprintf(fpout, "%s\t%s\t%s\t%s\tSAP - Missing Data\n",
+                        (master + mpos)->pcode,
+                        (master + mpos)->label,
+                        (master + mpos)->attr_name,
+                        (master + mpos)->attr_val);
+                errors = true;
+                mpos++;
+            }
+
+
             while (strcmp(prevMasterLabel, (master + mpos)->label) == 0) {
                 if (strcmp((master + mpos)->attr_name, "TEMPLATENUMBER") == 0)
                     fprintf(fpout, "%s\t%s\t%s\t%s\tLabel not in Extract File!\n",
@@ -291,6 +313,20 @@ int compare_attributes(const void *p, const void *q) {
             return 1;
     } else
         return 0;
+}
+
+int chkdups(Idoc_row *sap, int sap_numlines) {
+
+    int i = 0;
+    while (i < sap_numlines - 1) {
+        if ((strcasecmp((sap + i)->pcode, (sap + i + 1)->pcode) == 0) &&
+            (strcasecmp((sap + i)->label, (sap + i + 1)->label) == 0) &&
+            (strcasecmp((sap + i)->attr_name, (sap + i + 1)->attr_name) == 0) &&
+            (strcasecmp((sap + i)->attr_val, (sap + i + 1)->attr_val) == 0))
+            return 1;
+        else
+            i++;
+    }
 }
 
 char *get_value(char *line) {

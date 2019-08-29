@@ -42,6 +42,8 @@ int compare_attributes(const void *p, const void *q);
 
 int compare(FILE *fpout, Idoc_row *master, size_t mrows, Idoc_row *sap, size_t srows);
 
+int chkdups(Idoc_row *sap, int sap_numlines);
+
 int equals_blanktif(char *str);
 
 int equals_no(char *field);
